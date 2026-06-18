@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:splitly_member/repository/household_status_repository.dart';
 import 'package:splitly_member/repository/quotas_repository.dart';
 import 'repository/dashboard_repository.dart';
@@ -13,7 +14,9 @@ import 'bloc/auth_bloc.dart';
 import 'db/local_database.dart';
 import 'views/sign_in_view.dart';
 
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await dotenv.load(fileName: ".env");
   runApp(const MyApp());
 }
 

@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../db/local_database.dart';
 
 class SettingsData {
@@ -23,7 +24,7 @@ class SettingsData {
 }
 
 class SettingsRepository {
-  static const String baseUrl = "http://192.168.1.31:5070/api/v1";
+  final String baseUrl = dotenv.get('BASE_URL');
   final LocalDatabase localDatabase;
 
   SettingsRepository({required this.localDatabase});
