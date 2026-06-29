@@ -1,6 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+
+// --- NUEVAS IMPORTACIONES DE FIREBASE ---
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
+// ----------------------------------------
+
 import 'package:splitly_member/repository/household_status_repository.dart';
 import 'package:splitly_member/repository/quotas_repository.dart';
 import 'repository/dashboard_repository.dart';
@@ -17,6 +23,13 @@ import 'views/sign_in_view.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load(fileName: ".env");
+
+  // --- NUEVA INICIALIZACIÓN DE FIREBASE ---
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+  // ----------------------------------------
+
   runApp(const MyApp());
 }
 
