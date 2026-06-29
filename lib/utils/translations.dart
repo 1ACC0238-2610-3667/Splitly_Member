@@ -73,6 +73,10 @@ class Translations {
       'notifications': 'Notificaciones',
       'language': 'Idioma',
       'logout': 'Cerrar Sesión',
+      'dashboard_tab': 'Dashboard',
+      'quotas_tab': 'Cuotas',
+      'household_tab': 'Hogar',
+      'settings_tab': 'Ajustes',
     },
     'en': {
       'welcome_logo': 'Manage your household expenses',
@@ -143,6 +147,10 @@ class Translations {
       'notifications': 'Notifications',
       'language': 'Language',
       'logout': 'Log Out',
+      'dashboard_tab': 'Dashboard',
+      'quotas_tab': 'Quotas',
+      'household_tab': 'Household',
+      'settings_tab': 'Settings',
     }
   };
 

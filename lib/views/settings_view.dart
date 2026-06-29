@@ -43,7 +43,7 @@ class _SettingsViewState extends State<SettingsView> {
               children: [
                 Text(
                   context.tr('app_preferences'),
-                  style: const TextStyle(color: Color(0xFF64748B), fontWeight: FontWeight.bold),
+                  style: TextStyle(color: isDark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B), fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 16),
                 

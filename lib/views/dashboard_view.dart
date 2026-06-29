@@ -63,7 +63,7 @@ class _DashboardViewState extends State<DashboardView> {
                                 const SizedBox(height: 4),
                                 Text(
                                   "${context.tr('household')}: ${data.householdId}",
-                                  style: const TextStyle(fontSize: 14, color: Color(0xFF64748B)),
+                                  style: TextStyle(fontSize: 14, color: isDark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B)),
                                 ),
                               ],
                             ),
@@ -162,7 +162,7 @@ class _DashboardViewState extends State<DashboardView> {
         children: [
           Text(
             context.tr('pending_debt_total'),
-            style: const TextStyle(color: Color(0xFF94A3B8), fontSize: 14),
+            style: TextStyle(color: isDark ? const Color(0xFFCBD5E1) : const Color(0xFF94A3B8), fontSize: 14),
           ),
           const SizedBox(height: 8),
           Text(
@@ -199,7 +199,7 @@ class _DashboardViewState extends State<DashboardView> {
               data.paidDebt.toStringAsFixed(0),
               data.totalDebt.toStringAsFixed(0),
             ]),
-            style: const TextStyle(color: Color(0xFF94A3B8), fontSize: 12),
+            style: TextStyle(color: isDark ? const Color(0xFFCBD5E1) : const Color(0xFF94A3B8), fontSize: 12),
           ),
         ],
       ),
@@ -254,7 +254,7 @@ class _DashboardViewState extends State<DashboardView> {
           const SizedBox(height: 2),
           Text(
             subtitle,
-            style: const TextStyle(fontSize: 11, color: Color(0xFF94A3B8)),
+            style: TextStyle(fontSize: 11, color: isDark ? const Color(0xFFCBD5E1) : const Color(0xFF94A3B8)),
           ),
         ],
       ),
@@ -262,6 +262,8 @@ class _DashboardViewState extends State<DashboardView> {
   }
 
   Widget _buildRecentQuotasList(BuildContext context, List<QuotaItem> recentQuotas) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     if (recentQuotas.isEmpty) {
       return Container(
         width: double.infinity,
@@ -270,7 +272,7 @@ class _DashboardViewState extends State<DashboardView> {
           color: Theme.of(context).cardColor,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: Theme.of(context).brightness == Brightness.dark
+            color: isDark
                 ? Colors.grey.shade800
                 : const Color(0xFFE2E8F0),
           ),
@@ -282,7 +284,7 @@ class _DashboardViewState extends State<DashboardView> {
             Text(
               context.tr('no_pending_quotas'),
               textAlign: TextAlign.center,
-              style: const TextStyle(color: Color(0xFF94A3B8), fontSize: 14),
+              style: TextStyle(color: isDark ? const Color(0xFFCBD5E1) : const Color(0xFF94A3B8), fontSize: 14),
             ),
           ],
         ),
@@ -349,7 +351,7 @@ class _DashboardViewState extends State<DashboardView> {
                     const SizedBox(height: 4),
                     Text(
                       context.tr('due_date', args: [dateTxt]),
-                      style: const TextStyle(color: Color(0xFF94A3B8), fontSize: 12),
+                      style: TextStyle(color: isDark ? const Color(0xFFCBD5E1) : const Color(0xFF94A3B8), fontSize: 12),
                     ),
                   ],
                 ),

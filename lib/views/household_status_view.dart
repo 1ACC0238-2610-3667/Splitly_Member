@@ -169,7 +169,7 @@ class _HouseholdStatusViewState extends State<HouseholdStatusView> {
             children: [
               Text(
                 label,
-                style: const TextStyle(color: Color(0xFF64748B), fontSize: 13, fontWeight: FontWeight.w500),
+                style: TextStyle(color: isDark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B), fontSize: 13, fontWeight: FontWeight.w500),
               ),
               Icon(icon, size: 18, color: color),
             ],
@@ -204,7 +204,7 @@ class _HouseholdStatusViewState extends State<HouseholdStatusView> {
             const SizedBox(height: 12),
             Text(
               context.tr('no_members'),
-              style: const TextStyle(color: Color(0xFF94A3B8)),
+              style: TextStyle(color: isDark ? const Color(0xFFCBD5E1) : const Color(0xFF94A3B8)),
             ),
           ],
         ),
@@ -267,7 +267,7 @@ class _HouseholdStatusViewState extends State<HouseholdStatusView> {
                         ),
                         Text(
                           context.tr('limit', args: [deadlineTxt]),
-                          style: const TextStyle(color: Color(0xFF64748B), fontSize: 12),
+                          style: TextStyle(color: isDark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B), fontSize: 12),
                         ),
                       ],
                     ),
@@ -326,7 +326,7 @@ class _HouseholdStatusViewState extends State<HouseholdStatusView> {
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(label, style: const TextStyle(color: Color(0xFF94A3B8), fontSize: 10)),
+            Text(label, style: TextStyle(color: isDark ? const Color(0xFFCBD5E1) : const Color(0xFF94A3B8), fontSize: 10)),
             Text(
               value,
               style: TextStyle(

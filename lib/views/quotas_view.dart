@@ -386,10 +386,10 @@ class _QuotasViewState extends State<QuotasView> {
                             ),
                           ),
                           const SizedBox(height: 4),
-                          Text(
-                            context.tr('due_date', args: [dateTxt]),
-                            style: const TextStyle(color: Color(0xFF64748B), fontSize: 13),
-                          ),
+                           Text(
+                             context.tr('due_date', args: [dateTxt]),
+                             style: TextStyle(color: isDark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B), fontSize: 13),
+                           ),
                         ],
                       ),
                     ),
@@ -468,14 +468,14 @@ class _QuotasViewState extends State<QuotasView> {
               ),
             ),
             const SizedBox(height: 12),
-            Text(
-              context.tr('confirm_payment_question', args: [
-                quota.amount.toStringAsFixed(2),
-                quota.description,
-              ]),
-              textAlign: TextAlign.center,
-              style: const TextStyle(color: Color(0xFF64748B), fontSize: 15),
-            ),
+             Text(
+               context.tr('confirm_payment_question', args: [
+                 quota.amount.toStringAsFixed(2),
+                 quota.description,
+               ]),
+               textAlign: TextAlign.center,
+               style: TextStyle(color: isDark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B), fontSize: 15),
+             ),
             const SizedBox(height: 32),
             Row(
               children: [
@@ -567,10 +567,10 @@ class _QuotasViewState extends State<QuotasView> {
                       ),
                     ),
                     const SizedBox(height: 4),
-                    Text(
-                      payDate,
-                      style: const TextStyle(color: Color(0xFF94A3B8), fontSize: 12),
-                    ),
+                     Text(
+                       payDate,
+                       style: TextStyle(color: isDark ? const Color(0xFFCBD5E1) : const Color(0xFF94A3B8), fontSize: 12),
+                     ),
                   ],
                 ),
               ),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../bloc/auth_bloc.dart';
 import '../bloc/auth_state.dart';
+import '../utils/translations.dart';
 import 'dashboard_view.dart';
 import 'quotas_view.dart';
 import 'household_status_view.dart';
@@ -26,6 +27,8 @@ class _MainLayoutViewState extends State<MainLayoutView> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return BlocListener<AuthBloc, AuthState>(
       listener: (context, state) {
         if (state is AuthLoggedOut) {
@@ -48,34 +51,38 @@ class _MainLayoutViewState extends State<MainLayoutView> {
         bottomNavigationBar: Container(
           decoration: BoxDecoration(
             boxShadow: [
-              BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, -4)),
+              BoxShadow(
+                color: isDark ? Colors.black45 : Colors.black.withOpacity(0.05),
+                blurRadius: 10,
+                offset: const Offset(0, -4),
+              ),
             ],
           ),
           child: BottomNavigationBar(
             currentIndex: _currentIndex,
             onTap: _changeTab,
-            backgroundColor: Colors.white,
-            selectedItemColor: const Color(0xFF0F172A),
-            unselectedItemColor: const Color(0xFF94A3B8), // Gris azulado
+            backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
+            selectedItemColor: isDark ? const Color(0xFF6366F1) : const Color(0xFF0F172A),
+            unselectedItemColor: isDark ? Colors.white54 : const Color(0xFF94A3B8),
             selectedLabelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
             unselectedLabelStyle: const TextStyle(fontSize: 12),
             type: BottomNavigationBarType.fixed,
-            items: const [
+            items: [
               BottomNavigationBarItem(
-                icon: Icon(Icons.dashboard_rounded),
-                label: 'Dashboard',
+                icon: const Icon(Icons.dashboard_rounded),
+                label: context.tr('dashboard_tab'),
               ),
               BottomNavigationBarItem(
-                icon: Icon(Icons.credit_card_rounded),
-                label: 'Cuotas',
+                icon: const Icon(Icons.credit_card_rounded),
+                label: context.tr('quotas_tab'),
               ),
               BottomNavigationBarItem(
-                icon: Icon(Icons.house_rounded),
-                label: 'Hogar',
+                icon: const Icon(Icons.house_rounded),
+                label: context.tr('household_tab'),
               ),
               BottomNavigationBarItem(
-                icon: Icon(Icons.settings_rounded),
-                label: 'Ajustes',
+                icon: const Icon(Icons.settings_rounded),
+                label: context.tr('settings_tab'),
               ),
             ],
           ),
