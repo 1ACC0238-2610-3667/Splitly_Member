@@ -1,7 +1,7 @@
 import 'dart:convert';
-import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../db/local_database.dart';
+import '../utils/http_client.dart';
 
 class SettingsData {
   final int id;
@@ -26,11 +26,11 @@ class SettingsData {
 class SettingsRepository {
   final String baseUrl = dotenv.get('BASE_URL');
   final LocalDatabase localDatabase;
+  final SharedHttpClient client = SharedHttpClient();
 
   SettingsRepository({required this.localDatabase});
 
   Future<SettingsData> getOrCreateSettings() async {
-    // 1. Try to read from local cache first
     final cached = await localDatabase.getCachedSettings();
     if (cached != null) {
       return SettingsData.fromJson(cached);
@@ -42,7 +42,7 @@ class SettingsRepository {
 
     final headers = {'Content-Type': 'application/json', 'Authorization': 'Bearer $token'};
 
-    final getRes = await http.get(Uri.parse('$baseUrl/settings?userId=$userId'), headers: headers);
+    final getRes = await client.get(Uri.parse('$baseUrl/settings?userId=$userId'), headers: headers);
     if (getRes.statusCode == 200 && getRes.body.isNotEmpty) {
       final decoded = jsonDecode(getRes.body);
       final settings = SettingsData.fromJson(decoded);
@@ -50,7 +50,7 @@ class SettingsRepository {
       return settings;
     }
 
-    final postRes = await http.post(
+    final postRes = await client.post(
       Uri.parse('$baseUrl/settings'),
       headers: headers,
       body: jsonEncode({"userId": userId, "language": "es", "darkMode": false, "notificationEnabled": true}),
@@ -65,15 +65,13 @@ class SettingsRepository {
   }
 
   Future<void> updateSettings(int id, String language, bool darkMode, bool notifEnabled) async {
-    // 1. Write through local cache first
     await localDatabase.saveSettings(id, language, darkMode, notifEnabled);
 
-    // 2. Perform API update
     final token = await localDatabase.getToken();
     final userId = await localDatabase.getUserId();
     final headers = {'Content-Type': 'application/json', 'Authorization': 'Bearer $token'};
 
-    final response = await http.put(
+    final response = await client.put(
       Uri.parse('$baseUrl/settings/$id'),
       headers: headers,
       body: jsonEncode({"id": id, "userId": userId, "language": language, "darkMode": darkMode, "notificationEnabled": notifEnabled}),

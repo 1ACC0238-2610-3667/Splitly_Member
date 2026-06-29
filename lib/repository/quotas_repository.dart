@@ -1,27 +1,82 @@
 import 'dart:convert';
-import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../db/local_database.dart';
 import '../models/dashboard_models.dart';
+import '../utils/http_client.dart';
 
 class QuotasRepository {
   final String baseUrl = dotenv.get('BASE_URL');
   final LocalDatabase localDatabase;
+  final SharedHttpClient client = SharedHttpClient();
 
   QuotasRepository({required this.localDatabase});
+
+  Future<UserIncome?> getCachedIncome() async {
+    final jsonStr = await localDatabase.getCachedIncome();
+    if (jsonStr == null || jsonStr.isEmpty) return null;
+    try {
+      final decoded = jsonDecode(jsonStr);
+      return UserIncome(
+        id: decoded['id'],
+        income: decoded['income'],
+      );
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<void> saveIncomeToCache(UserIncome income) async {
+    final payload = {
+      'id': income.id,
+      'income': income.income,
+    };
+    await localDatabase.saveIncomeCache(jsonEncode(payload));
+  }
+
+  Future<List<QuotaItem>?> getCachedQuotas() async {
+    final jsonStr = await localDatabase.getCachedQuotas();
+    if (jsonStr == null || jsonStr.isEmpty) return null;
+    try {
+      final List decoded = jsonDecode(jsonStr);
+      return decoded.map((e) => QuotaItem(
+        id: e['id'],
+        description: e['description'],
+        amount: e['amount'],
+        status: e['status'],
+        deadline: e['deadline'] != null ? DateTime.tryParse(e['deadline']) : null,
+        payedAt: e['payedAt'],
+      )).toList();
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<void> saveQuotasToCache(List<QuotaItem> quotas) async {
+    final listJson = quotas.map((e) => {
+      'id': e.id,
+      'description': e.description,
+      'amount': e.amount,
+      'status': e.status,
+      'deadline': e.deadline?.toIso8601String(),
+      'payedAt': e.payedAt,
+    }).toList();
+    await localDatabase.saveQuotasCache(jsonEncode(listJson));
+  }
 
   Future<UserIncome?> getUserIncome() async {
     final token = await localDatabase.getToken();
     final userId = await localDatabase.getUserId();
     if (token == null || userId == null) return null;
 
-    final response = await http.get(
+    final response = await client.get(
       Uri.parse('$baseUrl/user-income/byUserId/$userId'),
       headers: {'Authorization': 'Bearer $token'},
     );
 
     if (response.statusCode == 200 && response.body.isNotEmpty) {
-      return UserIncome.fromJson(jsonDecode(response.body));
+      final income = UserIncome.fromJson(jsonDecode(response.body));
+      await saveIncomeToCache(income);
+      return income;
     }
     return null;
   }
@@ -34,10 +89,10 @@ class QuotasRepository {
     final existing = await getUserIncome();
 
     final headers = {'Content-Type': 'application/json', 'Authorization': 'Bearer $token'};
-    http.Response response;
+    dynamic response;
 
     if (existing == null) {
-      response = await http.post(
+      response = await client.post(
         Uri.parse('$baseUrl/user-income'),
         headers: headers,
         body: jsonEncode({
@@ -47,7 +102,7 @@ class QuotasRepository {
         }),
       );
     } else {
-      response = await http.put(
+      response = await client.put(
         Uri.parse('$baseUrl/user-income/byId/${existing.id}'),
         headers: headers,
         body: jsonEncode({
@@ -70,7 +125,7 @@ class QuotasRepository {
 
     final headers = {'Content-Type': 'application/json', 'Authorization': 'Bearer $token'};
 
-    final membersRes = await http.get(Uri.parse('$baseUrl/household_member/user/$userId'), headers: headers);
+    final membersRes = await client.get(Uri.parse('$baseUrl/household_member/user/$userId'), headers: headers);
     if (membersRes.statusCode != 200) throw Exception("Error al consultar el miembro del hogar");
 
     final membersRaw = jsonDecode(membersRes.body);
@@ -80,14 +135,14 @@ class QuotasRepository {
       orElse: () => throw Exception("No estás asignado a este hogar"),
     );
 
-    final mcRes = await http.get(Uri.parse('$baseUrl/member_contribution/bymemberid/${currentMember.id}'), headers: headers);
+    final mcRes = await client.get(Uri.parse('$baseUrl/member_contribution/bymemberid/${currentMember.id}'), headers: headers);
     List<MemberContribution> mcList = [];
     if (mcRes.statusCode == 200 && mcRes.body.isNotEmpty) {
       final mcRaw = jsonDecode(mcRes.body);
       mcList = (mcRaw is List ? mcRaw : [mcRaw]).map((e) => MemberContribution.fromJson(e)).toList();
     }
 
-    final contribRes = await http.get(Uri.parse('$baseUrl/contribution/byhouseholdid/$householdId'), headers: headers);
+    final contribRes = await client.get(Uri.parse('$baseUrl/contribution/byhouseholdid/$householdId'), headers: headers);
     List<Contribution> contribList = [];
     if (contribRes.statusCode == 200 && contribRes.body.isNotEmpty) {
       final contribRaw = jsonDecode(contribRes.body);
@@ -114,12 +169,13 @@ class QuotasRepository {
         payedAt: mc.payedAt,
       ));
     }
+    await saveQuotasToCache(items);
     return items;
   }
 
   Future<void> requestPaymentApproval(String memberContributionId, double amount) async {
     final token = await localDatabase.getToken();
-    final response = await http.put(
+    final response = await client.put(
       Uri.parse('$baseUrl/member_contribution/$memberContributionId/request'),
       headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer $token'},
       body: jsonEncode({"amount": amount}),

@@ -8,12 +8,22 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
 
   DashboardBloc({required this.repository}) : super(DashboardInitial()) {
     on<LoadDashboardData>((event, emit) async {
-      emit(DashboardLoading());
+      final cached = await repository.getCachedDashboardData();
+      if (cached != null) {
+        emit(DashboardLoaded(cached));
+      } else {
+        emit(DashboardLoading());
+      }
       try {
         final data = await repository.getDashboardData();
+        await repository.saveDashboardDataToCache(data);
         emit(DashboardLoaded(data));
       } catch (e) {
-        emit(DashboardError(e.toString()));
+        if (state is! DashboardLoaded) {
+          emit(DashboardError(e.toString()));
+        }
+      } finally {
+        event.completer?.complete();
       }
     });
   }

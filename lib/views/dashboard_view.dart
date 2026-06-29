@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
@@ -37,7 +38,11 @@ class _DashboardViewState extends State<DashboardView> {
             } else if (state is DashboardLoaded) {
               final data = state.data;
               return RefreshIndicator(
-                onRefresh: () async => context.read<DashboardBloc>().add(LoadDashboardData()),
+                onRefresh: () async {
+                  final completer = Completer<void>();
+                  context.read<DashboardBloc>().add(LoadDashboardData(completer: completer));
+                  await completer.future;
+                },
                 color: const Color(0xFF6366F1),
                 child: SingleChildScrollView(
                   physics: const AlwaysScrollableScrollPhysics(),

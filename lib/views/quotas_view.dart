@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
@@ -36,15 +37,16 @@ class _QuotasViewState extends State<QuotasView> {
       appBar: AppBar(
         title: Text(
           context.tr('my_quotas'),
-          style: const TextStyle(fontWeight: FontWeight.bold),
+          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
         ),
         backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
         foregroundColor: Theme.of(context).appBarTheme.foregroundColor,
-        elevation: 1,
+        elevation: 0,
+        centerTitle: true,
       ),
       body: BlocConsumer<QuotasBloc, QuotasState>(
         listener: (context, state) {
-          if (state is QuotasLoaded && state.currentIncome != null && _incomeController.text.isEmpty) {
+          if (state is QuotasLoaded && state.currentIncome != null) {
             _incomeController.text = state.currentIncome!.income.toStringAsFixed(2);
           }
         },
@@ -55,7 +57,11 @@ class _QuotasViewState extends State<QuotasView> {
             return Center(child: Text(state.message, style: const TextStyle(color: Colors.red)));
           } else if (state is QuotasLoaded) {
             return RefreshIndicator(
-              onRefresh: () async => context.read<QuotasBloc>().add(LoadQuotas()),
+              onRefresh: () async {
+                final completer = Completer<void>();
+                context.read<QuotasBloc>().add(LoadQuotas(completer: completer));
+                await completer.future;
+              },
               color: const Color(0xFF6366F1),
               child: SingleChildScrollView(
                 physics: const AlwaysScrollableScrollPhysics(),

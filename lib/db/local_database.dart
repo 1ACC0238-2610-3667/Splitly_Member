@@ -44,6 +44,40 @@ class LocalDatabase {
     return null;
   }
 
+  static const String _dashboardCacheKey = "dashboard_cache_data";
+  static const String _quotasCacheKey = "quotas_cache_data";
+  static const String _incomeCacheKey = "income_cache_data";
+
+  Future<void> saveDashboardDataToCache(String jsonStr) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_dashboardCacheKey, jsonStr);
+  }
+
+  Future<String?> getCachedDashboardData() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_dashboardCacheKey);
+  }
+
+  Future<void> saveQuotasCache(String jsonStr) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_quotasCacheKey, jsonStr);
+  }
+
+  Future<String?> getCachedQuotas() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_quotasCacheKey);
+  }
+
+  Future<void> saveIncomeCache(String jsonStr) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_incomeCacheKey, jsonStr);
+  }
+
+  Future<String?> getCachedIncome() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_incomeCacheKey);
+  }
+
   Future<void> clearSession() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.clear();

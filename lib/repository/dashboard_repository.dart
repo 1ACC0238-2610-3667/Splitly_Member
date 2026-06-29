@@ -1,14 +1,70 @@
 import 'dart:convert';
-import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../db/local_database.dart';
 import '../models/dashboard_models.dart';
+import '../utils/http_client.dart';
 
 class DashboardRepository {
   final String baseUrl = dotenv.get('BASE_URL');
   final LocalDatabase localDatabase;
+  final SharedHttpClient client = SharedHttpClient();
 
   DashboardRepository({required this.localDatabase});
+
+  Future<DashboardData?> getCachedDashboardData() async {
+    final jsonStr = await localDatabase.getCachedDashboardData();
+    if (jsonStr == null || jsonStr.isEmpty) return null;
+    try {
+      final decoded = jsonDecode(jsonStr);
+      final listRaw = decoded['recentQuotas'] as List;
+      final recentQuotas = listRaw.map((e) => QuotaItem(
+        id: e['id'],
+        description: e['description'],
+        amount: e['amount'],
+        status: e['status'],
+        deadline: e['deadline'] != null ? DateTime.tryParse(e['deadline']) : null,
+        payedAt: e['payedAt'],
+      )).toList();
+
+      return DashboardData(
+        displayName: decoded['displayName'],
+        householdId: decoded['householdId'],
+        totalDebt: decoded['totalDebt'],
+        paidDebt: decoded['paidDebt'],
+        pendingDebt: decoded['pendingDebt'],
+        overdueCount: decoded['overdueCount'],
+        next7DaysCount: decoded['next7DaysCount'],
+        progressPercentage: decoded['progressPercentage'],
+        recentQuotas: recentQuotas,
+      );
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<void> saveDashboardDataToCache(DashboardData data) async {
+    final recentQuotasJson = data.recentQuotas.map((e) => {
+      'id': e.id,
+      'description': e.description,
+      'amount': e.amount,
+      'status': e.status,
+      'deadline': e.deadline?.toIso8601String(),
+      'payedAt': e.payedAt,
+    }).toList();
+
+    final payload = {
+      'displayName': data.displayName,
+      'householdId': data.householdId,
+      'totalDebt': data.totalDebt,
+      'paidDebt': data.paidDebt,
+      'pendingDebt': data.pendingDebt,
+      'overdueCount': data.overdueCount,
+      'next7DaysCount': data.next7DaysCount,
+      'progressPercentage': data.progressPercentage,
+      'recentQuotas': recentQuotasJson,
+    };
+    await localDatabase.saveDashboardDataToCache(jsonEncode(payload));
+  }
 
   Future<DashboardData> getDashboardData() async {
     final token = await localDatabase.getToken();
@@ -27,7 +83,7 @@ class DashboardRepository {
 
     String displayName = backupEmail ?? "Usuario";
     try {
-      final userRes = await http.get(Uri.parse('$baseUrl/user/user/$userId'), headers: headers);
+      final userRes = await client.get(Uri.parse('$baseUrl/user/user/$userId'), headers: headers);
       if (userRes.statusCode == 200 && userRes.body.isNotEmpty) {
         final userData = jsonDecode(userRes.body);
         final pName = userData['personName'] ?? '';
@@ -41,7 +97,7 @@ class DashboardRepository {
       }
     } catch (_) {}
 
-    final membersRes = await http.get(Uri.parse('$baseUrl/household_member/user/$userId'), headers: headers);
+    final membersRes = await client.get(Uri.parse('$baseUrl/household_member/user/$userId'), headers: headers);
     if (membersRes.statusCode != 200) {
       throw Exception("Error al consultar miembros del usuario.");
     }
@@ -56,7 +112,7 @@ class DashboardRepository {
     );
 
     List<Contribution> contributionsList = [];
-    final contributionsRes = await http.get(Uri.parse('$baseUrl/contribution/byhouseholdid/$householdId'), headers: headers);
+    final contributionsRes = await client.get(Uri.parse('$baseUrl/contribution/byhouseholdid/$householdId'), headers: headers);
 
     if (contributionsRes.statusCode == 200 && contributionsRes.body.isNotEmpty) {
       final decodedContributions = jsonDecode(contributionsRes.body);
@@ -65,7 +121,7 @@ class DashboardRepository {
     }
 
     List<MemberContribution> memberContributions = [];
-    final memberContribRes = await http.get(Uri.parse('$baseUrl/member_contribution/bymemberid/${currentMember.id}'), headers: headers);
+    final memberContribRes = await client.get(Uri.parse('$baseUrl/member_contribution/bymemberid/${currentMember.id}'), headers: headers);
 
     if (memberContribRes.statusCode == 200 && memberContribRes.body.isNotEmpty) {
       final decodedMemberContribs = jsonDecode(memberContribRes.body);
@@ -88,7 +144,6 @@ class DashboardRepository {
       totalDebt += mc.amount;
 
       String currentStatus = mc.status.toLowerCase();
-      // "done" es el valor real en C# de tu Enum EStatus = 1
       if (currentStatus == 'done' || currentStatus == 'paid' || currentStatus == 'approved') {
         paidDebt += mc.amount;
       } else {
@@ -122,12 +177,11 @@ class DashboardRepository {
       ));
     }
 
-    // Sort recentQuotas: pending/review first, sorted by deadline (if deadline is null, push to end)
     recentQuotas.sort((a, b) {
       bool aIsPaid = (a.status.toLowerCase() == 'done' || a.status.toLowerCase() == 'paid' || a.status.toLowerCase() == 'approved');
       bool bIsPaid = (b.status.toLowerCase() == 'done' || b.status.toLowerCase() == 'paid' || b.status.toLowerCase() == 'approved');
       if (aIsPaid != bIsPaid) {
-        return aIsPaid ? 1 : -1; // unpaid first
+        return aIsPaid ? 1 : -1;
       }
       if (a.deadline == null && b.deadline == null) return 0;
       if (a.deadline == null) return 1;

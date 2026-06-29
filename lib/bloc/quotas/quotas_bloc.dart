@@ -1,9 +1,13 @@
+import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../repository/quotas_repository.dart';
 import '../../models/dashboard_models.dart';
 
 abstract class QuotasEvent {}
-class LoadQuotas extends QuotasEvent {}
+class LoadQuotas extends QuotasEvent {
+  final Completer<void>? completer;
+  LoadQuotas({this.completer});
+}
 class SaveIncome extends QuotasEvent {
   final double amount;
   SaveIncome(this.amount);
@@ -48,7 +52,39 @@ class QuotasBloc extends Bloc<QuotasEvent, QuotasState> {
   }
 
   Future<void> _onLoadQuotas(LoadQuotas event, Emitter<QuotasState> emit) async {
-    emit(QuotasLoading());
+    final cachedIncome = await repository.getCachedIncome();
+    final cachedQuotas = await repository.getCachedQuotas();
+
+    if (cachedQuotas != null) {
+      double assigned = 0;
+      double paid = 0;
+      List<QuotaItem> pendingList = [];
+      List<QuotaItem> historyList = [];
+
+      for (var q in cachedQuotas) {
+        assigned += q.amount;
+        String status = q.status.toLowerCase();
+
+        if (status == 'done' || status == 'paid' || status == 'approved') {
+          paid += q.amount;
+          historyList.add(q);
+        } else {
+          pendingList.add(q);
+        }
+      }
+
+      emit(QuotasLoaded(
+        currentIncome: cachedIncome,
+        totalAssigned: assigned,
+        totalPaid: paid,
+        totalPending: assigned - paid,
+        pendingContributions: pendingList,
+        historyContributions: historyList,
+      ));
+    } else {
+      emit(QuotasLoading());
+    }
+
     try {
       final income = await repository.getUserIncome();
       final allQuotas = await repository.getMyQuotas();
@@ -79,7 +115,11 @@ class QuotasBloc extends Bloc<QuotasEvent, QuotasState> {
         historyContributions: historyList,
       ));
     } catch (e) {
-      emit(QuotasError(e.toString()));
+      if (state is! QuotasLoaded) {
+        emit(QuotasError(e.toString()));
+      }
+    } finally {
+      event.completer?.complete();
     }
   }
 

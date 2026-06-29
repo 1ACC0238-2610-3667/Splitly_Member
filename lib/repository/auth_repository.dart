@@ -1,17 +1,18 @@
 import 'dart:convert';
-import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import '../utils/http_client.dart';
 import '../models/sign_up_request.dart';
 import '../models/sign_in_request.dart';
 import '../models/auth_response.dart';
 
 class AuthRepository {
   final String baseUrl = dotenv.get('BASE_URL');
+  final SharedHttpClient client = SharedHttpClient();
 
   Future<void> signUpMember(SignUpRequest request) async {
     final url = Uri.parse('$baseUrl/authentication/sign-up');
     try {
-      final response = await http.post(
+      final response = await client.post(
         url,
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode(request.toJson()),
@@ -29,7 +30,7 @@ class AuthRepository {
   Future<AuthResponse> signIn(SignInRequest request) async {
     final url = Uri.parse('$baseUrl/authentication/sign-in');
     try {
-      final response = await http.post(
+      final response = await client.post(
         url,
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode(request.toJson()),
