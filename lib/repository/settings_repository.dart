@@ -30,6 +30,12 @@ class SettingsRepository {
   SettingsRepository({required this.localDatabase});
 
   Future<SettingsData> getOrCreateSettings() async {
+    // 1. Try to read from local cache first
+    final cached = await localDatabase.getCachedSettings();
+    if (cached != null) {
+      return SettingsData.fromJson(cached);
+    }
+
     final token = await localDatabase.getToken();
     final userId = await localDatabase.getUserId();
     if (token == null || userId == null) throw Exception("Sesión inválida");
@@ -38,7 +44,10 @@ class SettingsRepository {
 
     final getRes = await http.get(Uri.parse('$baseUrl/settings?userId=$userId'), headers: headers);
     if (getRes.statusCode == 200 && getRes.body.isNotEmpty) {
-      return SettingsData.fromJson(jsonDecode(getRes.body));
+      final decoded = jsonDecode(getRes.body);
+      final settings = SettingsData.fromJson(decoded);
+      await localDatabase.saveSettings(settings.id, settings.language, settings.darkMode, settings.notificationEnabled);
+      return settings;
     }
 
     final postRes = await http.post(
@@ -48,12 +57,18 @@ class SettingsRepository {
     );
 
     if (postRes.statusCode == 201 || postRes.statusCode == 200) {
-      return SettingsData.fromJson(jsonDecode(postRes.body));
+      final settings = SettingsData.fromJson(jsonDecode(postRes.body));
+      await localDatabase.saveSettings(settings.id, settings.language, settings.darkMode, settings.notificationEnabled);
+      return settings;
     }
     throw Exception("Error al obtener configuraciones");
   }
 
   Future<void> updateSettings(int id, String language, bool darkMode, bool notifEnabled) async {
+    // 1. Write through local cache first
+    await localDatabase.saveSettings(id, language, darkMode, notifEnabled);
+
+    // 2. Perform API update
     final token = await localDatabase.getToken();
     final userId = await localDatabase.getUserId();
     final headers = {'Content-Type': 'application/json', 'Authorization': 'Bearer $token'};

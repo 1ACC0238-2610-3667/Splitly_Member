@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import '../bloc/quotas/quotas_bloc.dart';
+import '../models/dashboard_models.dart';
+import '../utils/translations.dart';
 
 class QuotasView extends StatefulWidget {
   const QuotasView({Key? key}) : super(key: key);
@@ -27,12 +29,17 @@ class _QuotasViewState extends State<QuotasView> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        title: const Text("Mis Cuotas", style: TextStyle(fontWeight: FontWeight.bold)),
-        backgroundColor: Colors.white,
-        foregroundColor: const Color(0xFF0F172A),
+        title: Text(
+          context.tr('my_quotas'),
+          style: const TextStyle(fontWeight: FontWeight.bold),
+        ),
+        backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
+        foregroundColor: Theme.of(context).appBarTheme.foregroundColor,
         elevation: 1,
       ),
       body: BlocConsumer<QuotasBloc, QuotasState>(
@@ -58,15 +65,15 @@ class _QuotasViewState extends State<QuotasView> {
                   children: [
                     _buildIncomeCard(context),
                     const SizedBox(height: 24),
-                    _buildSummaryCard(state),
+                    _buildSummaryCard(context, state),
                     const SizedBox(height: 24),
-                    _buildSectionHeader("Contribuciones pendientes", Icons.pending_actions_rounded),
+                    _buildSectionHeader(context, context.tr('pending_contributions'), Icons.pending_actions_rounded),
                     const SizedBox(height: 12),
                     _buildPendingList(state, context),
                     const SizedBox(height: 24),
-                    _buildSectionHeader("Historial de pagos", Icons.history_rounded),
+                    _buildSectionHeader(context, context.tr('payment_history'), Icons.history_rounded),
                     const SizedBox(height: 12),
-                    _buildHistoryList(state),
+                    _buildHistoryList(context, state),
                     const SizedBox(height: 40),
                   ],
                 ),
@@ -80,12 +87,14 @@ class _QuotasViewState extends State<QuotasView> {
   }
 
   Widget _buildIncomeCard(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Card(
       elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: Colors.grey.shade200),
+        side: BorderSide(color: isDark ? Colors.grey.shade800 : Colors.grey.shade200),
       ),
+      color: Theme.of(context).cardColor,
       child: Padding(
         padding: const EdgeInsets.all(20),
         child: Column(
@@ -96,22 +105,34 @@ class _QuotasViewState extends State<QuotasView> {
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFE0F2FE),
+                    color: isDark ? const Color(0xFF0C4A6E) : const Color(0xFFE0F2FE),
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: const Icon(Icons.account_balance_wallet_rounded, color: Color(0xFF0284C7), size: 20),
+                  child: Icon(
+                    Icons.account_balance_wallet_rounded,
+                    color: isDark ? const Color(0xFF38BDF8) : const Color(0xFF0284C7),
+                    size: 20,
+                  ),
                 ),
                 const SizedBox(width: 12),
-                const Text(
-                  "Tu ingreso mensual",
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF1E293B)),
+                Text(
+                  context.tr('monthly_income'),
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: isDark ? Colors.white : const Color(0xFF1E293B),
+                  ),
                 ),
               ],
             ),
             const SizedBox(height: 12),
-            const Text(
-              "Usamos este dato para ayudarte a organizar tus finanzas. Solo tú puedes verlo.",
-              style: TextStyle(color: Color(0xFF64748B), fontSize: 13, height: 1.4),
+            Text(
+              context.tr('income_helper'),
+              style: TextStyle(
+                color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+                fontSize: 13,
+                height: 1.4,
+              ),
             ),
             const SizedBox(height: 20),
             Row(
@@ -120,14 +141,21 @@ class _QuotasViewState extends State<QuotasView> {
                   child: TextField(
                     controller: _incomeController,
                     keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                    style: TextStyle(color: isDark ? Colors.white : const Color(0xFF1E293B)),
                     decoration: InputDecoration(
                       hintText: "0.00",
-                      prefixIcon: const Padding(
-                        padding: EdgeInsets.symmetric(vertical: 12, horizontal: 12),
-                        child: Text("S/", style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF64748B))),
+                      prefixIcon: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
+                        child: Text(
+                          "S/",
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+                          ),
+                        ),
                       ),
                       filled: true,
-                      fillColor: const Color(0xFFF1F5F9),
+                      fillColor: isDark ? const Color(0xFF0F172A) : const Color(0xFFF1F5F9),
                       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
@@ -152,7 +180,7 @@ class _QuotasViewState extends State<QuotasView> {
                       context.read<QuotasBloc>().add(SaveIncome(val));
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
-                          content: const Text("Ingreso actualizado correctamente"),
+                          content: Text(context.tr('income_updated')),
                           backgroundColor: const Color(0xFF10B981),
                           behavior: SnackBarBehavior.floating,
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
@@ -167,7 +195,7 @@ class _QuotasViewState extends State<QuotasView> {
                     elevation: 0,
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   ),
-                  child: const Text("Guardar", style: TextStyle(fontWeight: FontWeight.bold)),
+                  child: Text(context.tr('save'), style: const TextStyle(fontWeight: FontWeight.bold)),
                 )
               ],
             )
@@ -177,7 +205,7 @@ class _QuotasViewState extends State<QuotasView> {
     );
   }
 
-  Widget _buildSummaryCard(QuotasLoaded state) {
+  Widget _buildSummaryCard(BuildContext context, QuotasLoaded state) {
     double progress = state.totalAssigned > 0 ? (state.totalPaid / state.totalAssigned) : 0;
     int progressPercent = (progress * 100).toInt();
 
@@ -201,17 +229,17 @@ class _QuotasViewState extends State<QuotasView> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            "Resumen de Aportes",
-            style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+          Text(
+            context.tr('contribution_summary'),
+            style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 20),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              _buildSummaryItem("Asignado", state.totalAssigned),
-              _buildSummaryItem("Pagado", state.totalPaid),
-              _buildSummaryItem("Pendiente", state.totalPending),
+              _buildSummaryItem(context.tr('assigned'), state.totalAssigned),
+              _buildSummaryItem(context.tr('paid'), state.totalPaid),
+              _buildSummaryItem(context.tr('pending'), state.totalPending),
             ],
           ),
           const SizedBox(height: 24),
@@ -249,11 +277,11 @@ class _QuotasViewState extends State<QuotasView> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                "$progressPercent% completado",
+                "$progressPercent% ${context.tr('completed')}",
                 style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w500),
               ),
               Text(
-                "S/ ${state.totalPending.toStringAsFixed(2)} faltantes",
+                "S/ ${state.totalPending.toStringAsFixed(2)} ${context.tr('remaining')}",
                 style: TextStyle(color: Colors.white.withOpacity(0.8), fontSize: 13),
               ),
             ],
@@ -280,14 +308,19 @@ class _QuotasViewState extends State<QuotasView> {
     );
   }
 
-  Widget _buildSectionHeader(String title, IconData icon) {
+  Widget _buildSectionHeader(BuildContext context, String title, IconData icon) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Row(
       children: [
-        Icon(icon, size: 20, color: const Color(0xFF1E293B)),
+        Icon(icon, size: 20, color: isDark ? Colors.white70 : const Color(0xFF1E293B)),
         const SizedBox(width: 8),
         Text(
           title,
-          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF1E293B)),
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: isDark ? Colors.white : const Color(0xFF1E293B),
+          ),
         ),
       ],
     );
@@ -295,25 +328,27 @@ class _QuotasViewState extends State<QuotasView> {
 
   Widget _buildPendingList(QuotasLoaded state, BuildContext context) {
     if (state.pendingContributions.isEmpty) {
-      return _buildEmptyState("No tienes cuotas pendientes", Icons.check_circle_outline_rounded);
+      return _buildEmptyState(context, context.tr('no_pending_quotas_list'), Icons.check_circle_outline_rounded);
     }
+
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Column(
       children: state.pendingContributions.map((quota) {
-        // CORRECCIÓN AQUÍ: Validar usando "review" o "request" que son los valores mapeados desde C#
         bool isRequested = quota.status.toLowerCase().contains('review') ||
             quota.status.toLowerCase().contains('request') ||
             quota.status.toLowerCase().contains('revisión');
 
-        String dateTxt = quota.deadline != null ? DateFormat('dd MMM, yyyy').format(quota.deadline!) : "Sin fecha";
+        String dateTxt = quota.deadline != null ? DateFormat('dd MMM, yyyy').format(quota.deadline!) : "-";
 
         return Card(
           elevation: 0,
           margin: const EdgeInsets.only(bottom: 12),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
-            side: BorderSide(color: Colors.grey.shade200),
+            side: BorderSide(color: isDark ? Colors.grey.shade800 : Colors.grey.shade200),
           ),
+          color: Theme.of(context).cardColor,
           child: Padding(
             padding: const EdgeInsets.all(16),
             child: Column(
@@ -324,12 +359,16 @@ class _QuotasViewState extends State<QuotasView> {
                     Container(
                       padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
-                        color: isRequested ? const Color(0xFFFFF7ED) : const Color(0xFFFEF2F2),
+                        color: isRequested
+                            ? (isDark ? const Color(0xFF7C2D12) : const Color(0xFFFFF7ED))
+                            : (isDark ? const Color(0xFF7F1D1D) : const Color(0xFFFEF2F2)),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Icon(
                         isRequested ? Icons.hourglass_empty_rounded : Icons.priority_high_rounded,
-                        color: isRequested ? const Color(0xFFEA580C) : const Color(0xFFDC2626),
+                        color: isRequested
+                            ? (isDark ? const Color(0xFFFDBA74) : const Color(0xFFEA580C))
+                            : (isDark ? const Color(0xFFFCA5A5) : const Color(0xFFDC2626)),
                         size: 24,
                       ),
                     ),
@@ -340,25 +379,37 @@ class _QuotasViewState extends State<QuotasView> {
                         children: [
                           Text(
                             quota.description,
-                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Color(0xFF1E293B)),
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                              color: isDark ? Colors.white : const Color(0xFF1E293B),
+                            ),
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            "Vence: $dateTxt",
+                            context.tr('due_date', args: [dateTxt]),
                             style: const TextStyle(color: Color(0xFF64748B), fontSize: 13),
                           ),
                         ],
                       ),
                     ),
+                    const SizedBox(width: 8),
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
                         Text(
                           "S/ ${quota.amount.toStringAsFixed(2)}",
-                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 17, color: Color(0xFF1E293B)),
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 17,
+                            color: isDark ? Colors.white : const Color(0xFF1E293B),
+                          ),
                         ),
                         const SizedBox(height: 4),
-                        _buildStatusBadge(isRequested ? "En revisión" : "Pendiente", isRequested ? Colors.orange : Colors.red),
+                        _buildStatusBadge(
+                          isRequested ? context.tr('in_review') : context.tr('pending'),
+                          isRequested ? Colors.orange : Colors.red,
+                        ),
                       ],
                     ),
                   ],
@@ -376,7 +427,7 @@ class _QuotasViewState extends State<QuotasView> {
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                         padding: const EdgeInsets.symmetric(vertical: 12),
                       ),
-                      child: const Text("Notificar Pago", style: TextStyle(fontWeight: FontWeight.bold)),
+                      child: Text(context.tr('notify_payment'), style: const TextStyle(fontWeight: FontWeight.bold)),
                     ),
                   ),
                 ]
@@ -388,9 +439,11 @@ class _QuotasViewState extends State<QuotasView> {
     );
   }
 
-  void _showPaymentConfirmation(BuildContext context, dynamic quota) {
+  void _showPaymentConfirmation(BuildContext context, QuotaItem quota) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     showModalBottomSheet(
       context: context,
+      backgroundColor: Theme.of(context).cardColor,
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
       builder: (context) => Padding(
         padding: const EdgeInsets.all(24),
@@ -400,13 +453,26 @@ class _QuotasViewState extends State<QuotasView> {
             Container(
               width: 40,
               height: 4,
-              decoration: BoxDecoration(color: Colors.grey.shade300, borderRadius: BorderRadius.circular(2)),
+              decoration: BoxDecoration(
+                color: isDark ? Colors.grey.shade700 : Colors.grey.shade300,
+                borderRadius: BorderRadius.circular(2),
+              ),
             ),
             const SizedBox(height: 24),
-            const Text("Confirmar Pago", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+            Text(
+              context.tr('confirm_payment'),
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: isDark ? Colors.white : const Color(0xFF1E293B),
+              ),
+            ),
             const SizedBox(height: 12),
             Text(
-              "¿Confirmas que has realizado el pago de S/ ${quota.amount.toStringAsFixed(2)} para '${quota.description}'?",
+              context.tr('confirm_payment_question', args: [
+                quota.amount.toStringAsFixed(2),
+                quota.description,
+              ]),
               textAlign: TextAlign.center,
               style: const TextStyle(color: Color(0xFF64748B), fontSize: 15),
             ),
@@ -419,8 +485,12 @@ class _QuotasViewState extends State<QuotasView> {
                     style: OutlinedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 15),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      side: BorderSide(color: isDark ? Colors.grey.shade700 : Colors.grey.shade300),
                     ),
-                    child: const Text("Cancelar"),
+                    child: Text(
+                      context.tr('cancel'),
+                      style: TextStyle(color: isDark ? Colors.white70 : Colors.black87),
+                    ),
                   ),
                 ),
                 const SizedBox(width: 16),
@@ -437,7 +507,7 @@ class _QuotasViewState extends State<QuotasView> {
                       elevation: 0,
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                     ),
-                    child: const Text("Confirmar"),
+                    child: Text(context.tr('confirm')),
                   ),
                 ),
               ],
@@ -449,14 +519,16 @@ class _QuotasViewState extends State<QuotasView> {
     );
   }
 
-  Widget _buildHistoryList(QuotasLoaded state) {
+  Widget _buildHistoryList(BuildContext context, QuotasLoaded state) {
     if (state.historyContributions.isEmpty) {
-      return _buildEmptyState("Aún no tienes historial de pagos", Icons.history_rounded);
+      return _buildEmptyState(context, context.tr('no_history_yet'), Icons.history_rounded);
     }
+
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Column(
       children: state.historyContributions.map((quota) {
-        String payDate = "Pagado";
+        String payDate = context.tr('paid');
         if (quota.payedAt != null && !quota.payedAt!.contains("0001")) {
           try {
             payDate = DateFormat('dd MMM, yyyy').format(DateTime.parse(quota.payedAt!));
@@ -467,16 +539,16 @@ class _QuotasViewState extends State<QuotasView> {
           margin: const EdgeInsets.only(bottom: 12),
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: Theme.of(context).cardColor,
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Colors.grey.shade200),
+            border: Border.all(color: isDark ? Colors.grey.shade800 : Colors.grey.shade200),
           ),
           child: Row(
             children: [
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFF0FDF4),
+                  color: isDark ? const Color(0xFF064E3B) : const Color(0xFFF0FDF4),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: const Icon(Icons.check_circle_rounded, color: Color(0xFF10B981), size: 24),
@@ -488,7 +560,11 @@ class _QuotasViewState extends State<QuotasView> {
                   children: [
                     Text(
                       quota.description,
-                      style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15, color: Color(0xFF1E293B)),
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 15,
+                        color: isDark ? Colors.white : const Color(0xFF1E293B),
+                      ),
                     ),
                     const SizedBox(height: 4),
                     Text(
@@ -523,18 +599,19 @@ class _QuotasViewState extends State<QuotasView> {
     );
   }
 
-  Widget _buildEmptyState(String message, IconData icon) {
+  Widget _buildEmptyState(BuildContext context, String message, IconData icon) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey.shade100),
+        border: Border.all(color: isDark ? Colors.grey.shade800 : Colors.grey.shade100),
       ),
       child: Column(
         children: [
-          Icon(icon, size: 48, color: Colors.grey.shade300),
+          Icon(icon, size: 48, color: isDark ? Colors.grey.shade700 : Colors.grey.shade300),
           const SizedBox(height: 16),
           Text(
             message,

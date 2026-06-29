@@ -76,13 +76,53 @@ class MyApp extends StatelessWidget {
           BlocProvider(
             create: (context) => SettingsBloc(
               repository: context.read<SettingsRepository>(),
-            ),
+            )..add(LoadSettings()),
           ),
         ],
-        child: MaterialApp(
-          title: 'Split House App',
-          theme: ThemeData(primarySwatch: Colors.blue),
-          home: const SignInView(),
+        child: BlocBuilder<SettingsBloc, SettingsState>(
+          builder: (context, settingsState) {
+            bool isDark = false;
+            if (settingsState is SettingsLoaded) {
+              isDark = settingsState.data.darkMode;
+            }
+            return MaterialApp(
+              title: 'Split House App',
+              themeMode: isDark ? ThemeMode.dark : ThemeMode.light,
+              theme: ThemeData(
+                brightness: Brightness.light,
+                primaryColor: const Color(0xFF6366F1),
+                scaffoldBackgroundColor: const Color(0xFFF8FAFC),
+                cardColor: Colors.white,
+                colorScheme: const ColorScheme.light(
+                  primary: Color(0xFF6366F1),
+                  surface: Colors.white,
+                  background: Color(0xFFF8FAFC),
+                ),
+                appBarTheme: const AppBarTheme(
+                  backgroundColor: Colors.white,
+                  foregroundColor: Color(0xFF1E293B),
+                  elevation: 0,
+                ),
+              ),
+              darkTheme: ThemeData(
+                brightness: Brightness.dark,
+                primaryColor: const Color(0xFF6366F1),
+                scaffoldBackgroundColor: const Color(0xFF0F172A),
+                cardColor: const Color(0xFF1E293B),
+                colorScheme: const ColorScheme.dark(
+                  primary: Color(0xFF6366F1),
+                  surface: Color(0xFF1E293B),
+                  background: Color(0xFF0F172A),
+                ),
+                appBarTheme: const AppBarTheme(
+                  backgroundColor: Color(0xFF1E293B),
+                  foregroundColor: Color(0xFFF1F5F9),
+                  elevation: 0,
+                ),
+              ),
+              home: const SignInView(),
+            );
+          },
         ),
       ),
     );

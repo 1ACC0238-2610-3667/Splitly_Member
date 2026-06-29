@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import '../bloc/household_status/household_status_bloc.dart';
 import '../models/dashboard_models.dart';
+import '../utils/translations.dart';
 
 class HouseholdStatusView extends StatefulWidget {
   const HouseholdStatusView({Key? key}) : super(key: key);
@@ -20,12 +21,17 @@ class _HouseholdStatusViewState extends State<HouseholdStatusView> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        title: const Text("Mi Hogar", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
-        backgroundColor: Colors.white,
-        foregroundColor: const Color(0xFF1E293B),
+        title: Text(
+          context.tr('my_household'),
+          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+        ),
+        backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
+        foregroundColor: Theme.of(context).appBarTheme.foregroundColor,
         elevation: 0,
         centerTitle: true,
         actions: [
@@ -48,7 +54,11 @@ class _HouseholdStatusViewState extends State<HouseholdStatusView> {
                   children: [
                     const Icon(Icons.error_outline_rounded, color: Colors.red, size: 60),
                     const SizedBox(height: 16),
-                    Text(state.message, textAlign: TextAlign.center, style: const TextStyle(color: Color(0xFF64748B))),
+                    Text(
+                      state.message,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(color: Color(0xFF64748B)),
+                    ),
                   ],
                 ),
               ),
@@ -63,22 +73,22 @@ class _HouseholdStatusViewState extends State<HouseholdStatusView> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _buildSectionHeader("Estado Global", Icons.dashboard_rounded),
+                    _buildSectionHeader(context, context.tr('global_status'), Icons.dashboard_rounded),
                     const SizedBox(height: 16),
-                    _buildSummaryGrid(state.data),
+                    _buildSummaryGrid(context, state.data),
                     const SizedBox(height: 32),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        _buildSectionHeader("Miembros del Hogar", Icons.people_rounded),
+                        _buildSectionHeader(context, context.tr('household_members'), Icons.people_rounded),
                         ElevatedButton.icon(
                           onPressed: () {
                             ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text("Exportando reporte...")),
+                              SnackBar(content: Text(context.tr('exporting_report'))),
                             );
                           },
                           icon: const Icon(Icons.download_rounded, size: 16),
-                          label: const Text("Reporte", style: TextStyle(fontSize: 12)),
+                          label: Text(context.tr('report'), style: const TextStyle(fontSize: 12)),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xFF10B981),
                             foregroundColor: Colors.white,
@@ -90,7 +100,7 @@ class _HouseholdStatusViewState extends State<HouseholdStatusView> {
                       ],
                     ),
                     const SizedBox(height: 16),
-                    _buildMembersList(state.data.details),
+                    _buildMembersList(context, state.data.details),
                     const SizedBox(height: 40),
                   ],
                 ),
@@ -103,20 +113,25 @@ class _HouseholdStatusViewState extends State<HouseholdStatusView> {
     );
   }
 
-  Widget _buildSectionHeader(String title, IconData icon) {
+  Widget _buildSectionHeader(BuildContext context, String title, IconData icon) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Row(
       children: [
-        Icon(icon, size: 20, color: const Color(0xFF475569)),
+        Icon(icon, size: 20, color: isDark ? Colors.white70 : const Color(0xFF475569)),
         const SizedBox(width: 8),
         Text(
           title,
-          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF1E293B)),
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: isDark ? Colors.white : const Color(0xFF1E293B),
+          ),
         ),
       ],
     );
   }
 
-  Widget _buildSummaryGrid(HouseholdStatusData data) {
+  Widget _buildSummaryGrid(BuildContext context, HouseholdStatusData data) {
     return GridView.count(
       crossAxisCount: 2,
       shrinkWrap: true,
@@ -125,21 +140,22 @@ class _HouseholdStatusViewState extends State<HouseholdStatusView> {
       mainAxisSpacing: 12,
       childAspectRatio: 1.4,
       children: [
-        _buildSummaryCard("Aportado", "S/ ${data.totalPaid.toStringAsFixed(0)}", Icons.payments_rounded, const Color(0xFF10B981)),
-        _buildSummaryCard("Meta", "S/ ${data.monthlyGoal.toStringAsFixed(0)}", Icons.flag_rounded, const Color(0xFF6366F1)),
-        _buildSummaryCard("Logro", "${data.fulfillmentPercentage}%", Icons.trending_up_rounded, const Color(0xFFF59E0B)),
-        _buildSummaryCard("Miembros", "${data.contributorsCount}", Icons.group_rounded, const Color(0xFF0EA5E9)),
+        _buildSummaryCard(context, context.tr('contributed'), "S/ ${data.totalPaid.toStringAsFixed(0)}", Icons.payments_rounded, const Color(0xFF10B981)),
+        _buildSummaryCard(context, context.tr('goal'), "S/ ${data.monthlyGoal.toStringAsFixed(0)}", Icons.flag_rounded, const Color(0xFF6366F1)),
+        _buildSummaryCard(context, context.tr('achievement'), "${data.fulfillmentPercentage}%", Icons.trending_up_rounded, const Color(0xFFF59E0B)),
+        _buildSummaryCard(context, context.tr('members'), "${data.contributorsCount}", Icons.group_rounded, const Color(0xFF0EA5E9)),
       ],
     );
   }
 
-  Widget _buildSummaryCard(String label, String value, IconData icon, Color color) {
+  Widget _buildSummaryCard(BuildContext context, String label, String value, IconData icon, Color color) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        border: Border.all(color: isDark ? Colors.grey.shade800 : const Color(0xFFE2E8F0)),
         boxShadow: [
           BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 4, offset: const Offset(0, 2)),
         ],
@@ -151,34 +167,45 @@ class _HouseholdStatusViewState extends State<HouseholdStatusView> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(label, style: const TextStyle(color: Color(0xFF64748B), fontSize: 13, fontWeight: FontWeight.w500)),
+              Text(
+                label,
+                style: const TextStyle(color: Color(0xFF64748B), fontSize: 13, fontWeight: FontWeight.w500),
+              ),
               Icon(icon, size: 18, color: color),
             ],
           ),
           Text(
             value,
-            style: const TextStyle(color: Color(0xFF1E293B), fontSize: 22, fontWeight: FontWeight.bold),
+            style: TextStyle(
+              color: isDark ? Colors.white : const Color(0xFF1E293B),
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
+            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildMembersList(List<HouseholdMemberDetail> details) {
+  Widget _buildMembersList(BuildContext context, List<HouseholdMemberDetail> details) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     if (details.isEmpty) {
       return Container(
         padding: const EdgeInsets.all(32),
         width: double.infinity,
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: Theme.of(context).cardColor,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: const Color(0xFFE2E8F0)),
+          border: Border.all(color: isDark ? Colors.grey.shade800 : const Color(0xFFE2E8F0)),
         ),
         child: Column(
-          children: const [
-            Icon(Icons.person_off_rounded, size: 48, color: Color(0xFFCBD5E1)),
-            SizedBox(height: 12),
-            Text("No hay miembros registrados", style: TextStyle(color: Color(0xFF94A3B8))),
+          children: [
+            const Icon(Icons.person_off_rounded, size: 48, color: Color(0xFFCBD5E1)),
+            const SizedBox(height: 12),
+            Text(
+              context.tr('no_members'),
+              style: const TextStyle(color: Color(0xFF94A3B8)),
+            ),
           ],
         ),
       );
@@ -195,19 +222,24 @@ class _HouseholdStatusViewState extends State<HouseholdStatusView> {
         bool isPaid = statusLower == 'done' || statusLower == 'paid' || statusLower == 'approved';
         bool isRequested = statusLower.contains('review') || statusLower.contains('request') || statusLower.contains('revisión');
 
-        String statusText = isPaid ? "Pagado" : (isRequested ? "En revisión" : "Pendiente");
-        Color statusColor = isPaid ? const Color(0xFF10B981) : (isRequested ? const Color(0xFFF59E0B) : const Color(0xFFEF4444));
-        String deadlineTxt = member.deadline != null ? DateFormat('dd/MM/yyyy').format(member.deadline!) : "Sin fecha";
+        String statusText = isPaid
+            ? context.tr('paid')
+            : (isRequested ? context.tr('in_review') : context.tr('pending'));
 
+        Color statusColor = isPaid
+            ? const Color(0xFF10B981)
+            : (isRequested ? const Color(0xFFF59E0B) : const Color(0xFFEF4444));
+
+        String deadlineTxt = member.deadline != null ? DateFormat('dd/MM/yyyy').format(member.deadline!) : "-";
         String initialLetter = member.memberName.isNotEmpty ? member.memberName.substring(0, 1).toUpperCase() : "?";
 
         return Container(
           margin: const EdgeInsets.only(bottom: 12),
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: Theme.of(context).cardColor,
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: const Color(0xFFE2E8F0)),
+            border: Border.all(color: isDark ? Colors.grey.shade800 : const Color(0xFFE2E8F0)),
           ),
           child: Column(
             children: [
@@ -227,10 +259,14 @@ class _HouseholdStatusViewState extends State<HouseholdStatusView> {
                       children: [
                         Text(
                           member.memberName,
-                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Color(0xFF1E293B)),
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                            color: isDark ? Colors.white : const Color(0xFF1E293B),
+                          ),
                         ),
                         Text(
-                          "Límite: $deadlineTxt",
+                          context.tr('limit', args: [deadlineTxt]),
                           style: const TextStyle(color: Color(0xFF64748B), fontSize: 12),
                         ),
                       ],
@@ -252,9 +288,20 @@ class _HouseholdStatusViewState extends State<HouseholdStatusView> {
               const Divider(height: 24, thickness: 0.5),
               Row(
                 children: [
-                  _buildMemberMetric("Asignado", "S/ ${member.assignedAmount.toStringAsFixed(2)}", Icons.assignment_outlined),
+                  _buildMemberMetric(
+                    context,
+                    context.tr('assigned'),
+                    "S/ ${member.assignedAmount.toStringAsFixed(2)}",
+                    Icons.assignment_outlined,
+                  ),
                   const SizedBox(width: 24),
-                  _buildMemberMetric("Aportado", "S/ ${member.paidAmount.toStringAsFixed(2)}", Icons.check_circle_outline_rounded, isBold: true),
+                  _buildMemberMetric(
+                    context,
+                    context.tr('paid'),
+                    "S/ ${member.paidAmount.toStringAsFixed(2)}",
+                    Icons.check_circle_outline_rounded,
+                    isBold: true,
+                  ),
                 ],
               ),
             ],
@@ -264,7 +311,14 @@ class _HouseholdStatusViewState extends State<HouseholdStatusView> {
     );
   }
 
-  Widget _buildMemberMetric(String label, String value, IconData icon, {bool isBold = false}) {
+  Widget _buildMemberMetric(
+    BuildContext context,
+    String label,
+    String value,
+    IconData icon, {
+    bool isBold = false,
+  }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Row(
       children: [
         Icon(icon, size: 14, color: const Color(0xFF94A3B8)),
@@ -276,7 +330,7 @@ class _HouseholdStatusViewState extends State<HouseholdStatusView> {
             Text(
               value,
               style: TextStyle(
-                color: const Color(0xFF475569),
+                color: isDark ? Colors.white70 : const Color(0xFF475569),
                 fontSize: 13,
                 fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
               ),

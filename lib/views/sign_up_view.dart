@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../bloc/auth_bloc.dart';
 import '../bloc/auth_event.dart';
 import '../bloc/auth_state.dart';
+import '../utils/translations.dart';
 
 class SignUpView extends StatefulWidget {
   const SignUpView({Key? key}) : super(key: key);
@@ -43,13 +44,16 @@ class _SignUpViewState extends State<SignUpView> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
+        foregroundColor: Theme.of(context).appBarTheme.foregroundColor,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Color(0xFF1E293B)),
+          icon: Icon(Icons.arrow_back_ios_new_rounded, color: isDark ? Colors.white : const Color(0xFF1E293B)),
           onPressed: () => Navigator.pop(context),
         ),
       ),
@@ -86,21 +90,21 @@ class _SignUpViewState extends State<SignUpView> {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     const SizedBox(height: 20),
-                    const Text(
-                      "Crea tu cuenta",
+                    Text(
+                      context.tr('create_account'),
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: 32,
                         fontWeight: FontWeight.w900,
-                        color: Color(0xFF1E293B),
+                        color: isDark ? Colors.white : const Color(0xFF1E293B),
                         letterSpacing: -1,
                       ),
                     ),
                     const SizedBox(height: 12),
-                    const Text(
-                      "Únete a un hogar y empieza a organizar tus gastos",
+                    Text(
+                      context.tr('signup_subtitle'),
                       textAlign: TextAlign.center,
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 16,
                         color: Color(0xFF64748B),
                         fontWeight: FontWeight.w500,
@@ -109,25 +113,28 @@ class _SignUpViewState extends State<SignUpView> {
                     const SizedBox(height: 40),
                     
                     _buildInputField(
+                      context: context,
                       controller: _nameController,
-                      label: "Nombre completo",
+                      label: context.tr('full_name'),
                       icon: Icons.person_outline_rounded,
-                      validator: (value) => value == null || value.isEmpty ? "Ingresa tu nombre" : null,
+                      validator: (value) => value == null || value.isEmpty ? context.tr('enter_name') : null,
                     ),
                     const SizedBox(height: 20),
                     
                     _buildInputField(
+                      context: context,
                       controller: _emailController,
-                      label: "Correo electrónico",
+                      label: context.tr('email'),
                       icon: Icons.email_outlined,
                       keyboardType: TextInputType.emailAddress,
-                      validator: (value) => value == null || value.isEmpty ? "Ingresa tu correo" : null,
+                      validator: (value) => value == null || value.isEmpty ? context.tr('enter_email') : null,
                     ),
                     const SizedBox(height: 20),
                     
                     _buildInputField(
+                      context: context,
                       controller: _passwordController,
-                      label: "Contraseña",
+                      label: context.tr('password'),
                       icon: Icons.lock_outline_rounded,
                       obscureText: _obscurePassword,
                       suffixIcon: IconButton(
@@ -138,16 +145,17 @@ class _SignUpViewState extends State<SignUpView> {
                         ),
                         onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
                       ),
-                      validator: (value) => value != null && value.length < 6 ? "Mínimo 6 caracteres" : null,
+                      validator: (value) => value != null && value.length < 6 ? context.tr('min_characters') : null,
                     ),
                     const SizedBox(height: 20),
                     
                     _buildInputField(
+                      context: context,
                       controller: _householdController,
-                      label: "Código del Hogar",
+                      label: context.tr('household_code'),
                       icon: Icons.home_work_outlined,
-                      helperText: "Pídele este código al representante de tu casa",
-                      validator: (value) => value == null || value.isEmpty ? "Ingresa el código del hogar" : null,
+                      helperText: context.tr('household_helper'),
+                      validator: (value) => value == null || value.isEmpty ? context.tr('enter_household') : null,
                     ),
                     
                     const SizedBox(height: 40),
@@ -166,9 +174,9 @@ class _SignUpViewState extends State<SignUpView> {
                               elevation: 4,
                               shadowColor: const Color(0xFF6366F1).withOpacity(0.4),
                             ),
-                            child: const Text(
-                              "Registrarse",
-                              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                            child: Text(
+                              context.tr('register'),
+                              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                             ),
                           ),
                     const SizedBox(height: 40),
@@ -183,6 +191,7 @@ class _SignUpViewState extends State<SignUpView> {
   }
 
   Widget _buildInputField({
+    required BuildContext context,
     required TextEditingController controller,
     required String label,
     required IconData icon,
@@ -192,12 +201,13 @@ class _SignUpViewState extends State<SignUpView> {
     String? helperText,
     String? Function(String?)? validator,
   }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return TextFormField(
       controller: controller,
       obscureText: obscureText,
       keyboardType: keyboardType,
       validator: validator,
-      style: const TextStyle(fontWeight: FontWeight.w500, color: Color(0xFF1E293B)),
+      style: TextStyle(fontWeight: FontWeight.w500, color: isDark ? Colors.white : const Color(0xFF1E293B)),
       decoration: InputDecoration(
         labelText: label,
         labelStyle: const TextStyle(color: Color(0xFF64748B), fontWeight: FontWeight.w400),
@@ -206,7 +216,7 @@ class _SignUpViewState extends State<SignUpView> {
         prefixIcon: Icon(icon, color: const Color(0xFF64748B)),
         suffixIcon: suffixIcon,
         filled: true,
-        fillColor: const Color(0xFFF1F5F9),
+        fillColor: isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F5F9),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
           borderSide: BorderSide.none,

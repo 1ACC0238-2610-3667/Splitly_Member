@@ -82,6 +82,8 @@ class DashboardRepository {
     int next7DaysCount = 0;
     final now = DateTime.now();
 
+    List<QuotaItem> recentQuotas = [];
+
     for (var mc in memberContributions) {
       totalDebt += mc.amount;
 
@@ -101,7 +103,39 @@ class DashboardRepository {
           }
         } catch (_) {}
       }
+
+      String description = "Cuota del Hogar";
+      DateTime? deadline;
+      try {
+        final parent = contributionsList.firstWhere((c) => c.id == mc.contributionId);
+        description = parent.description;
+        deadline = parent.deadlineForMembers;
+      } catch (_) {}
+
+      recentQuotas.add(QuotaItem(
+        id: mc.id,
+        description: description,
+        amount: mc.amount,
+        status: mc.status,
+        deadline: deadline,
+        payedAt: mc.payedAt,
+      ));
     }
+
+    // Sort recentQuotas: pending/review first, sorted by deadline (if deadline is null, push to end)
+    recentQuotas.sort((a, b) {
+      bool aIsPaid = (a.status.toLowerCase() == 'done' || a.status.toLowerCase() == 'paid' || a.status.toLowerCase() == 'approved');
+      bool bIsPaid = (b.status.toLowerCase() == 'done' || b.status.toLowerCase() == 'paid' || b.status.toLowerCase() == 'approved');
+      if (aIsPaid != bIsPaid) {
+        return aIsPaid ? 1 : -1; // unpaid first
+      }
+      if (a.deadline == null && b.deadline == null) return 0;
+      if (a.deadline == null) return 1;
+      if (b.deadline == null) return -1;
+      return a.deadline!.compareTo(b.deadline!);
+    });
+
+    final top3Quotas = recentQuotas.take(3).toList();
 
     return DashboardData(
       displayName: displayName,
@@ -112,6 +146,7 @@ class DashboardRepository {
       overdueCount: overdueCount,
       next7DaysCount: next7DaysCount,
       progressPercentage: totalDebt > 0 ? (paidDebt / totalDebt) : 0.0,
+      recentQuotas: top3Quotas,
     );
   }
 }

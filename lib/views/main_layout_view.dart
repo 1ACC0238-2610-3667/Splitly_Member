@@ -38,11 +38,11 @@ class _MainLayoutViewState extends State<MainLayoutView> {
       child: Scaffold(
         body: IndexedStack(
           index: _currentIndex,
-          children: [
-            DashboardView(onNavigate: _changeTab),
-            const QuotasView(),
-            const HouseholdStatusView(),
-            const SettingsView(),
+          children: const [
+            DashboardView(),
+            QuotasView(),
+            HouseholdStatusView(),
+            SettingsView(),
           ],
         ),
         bottomNavigationBar: Container(

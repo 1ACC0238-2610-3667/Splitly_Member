@@ -90,6 +90,7 @@ class DashboardData {
   final int overdueCount;
   final int next7DaysCount;
   final double progressPercentage;
+  final List<QuotaItem> recentQuotas;
 
   DashboardData({
     required this.displayName,
@@ -100,6 +101,7 @@ class DashboardData {
     required this.overdueCount,
     required this.next7DaysCount,
     required this.progressPercentage,
+    required this.recentQuotas,
   });
 }
 

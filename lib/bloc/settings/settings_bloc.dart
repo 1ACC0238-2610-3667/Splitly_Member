@@ -22,6 +22,15 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
 
   SettingsBloc({required this.repository}) : super(SettingsLoading()) {
     on<LoadSettings>((event, emit) async {
+      // 1. Instantly load from cache if available
+      try {
+        final cached = await repository.localDatabase.getCachedSettings();
+        if (cached != null) {
+          emit(SettingsLoaded(SettingsData.fromJson(cached)));
+        }
+      } catch (_) {}
+
+      // 2. Fetch and sync from repository (updates cache as well)
       try {
         final data = await repository.getOrCreateSettings();
         emit(SettingsLoaded(data));

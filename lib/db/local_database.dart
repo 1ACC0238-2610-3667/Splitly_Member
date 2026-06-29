@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class LocalDatabase {
@@ -5,6 +6,7 @@ class LocalDatabase {
   static const String _householdKey = "household_id";
   static const String _userIdKey = "user_id";
   static const String _emailKey = "user_email";
+  static const String _settingsKey = "settings_cache";
 
   Future<void> saveSession(String token, String householdId, int userId, String email) async {
     final prefs = await SharedPreferences.getInstance();
@@ -18,6 +20,29 @@ class LocalDatabase {
   Future<String?> getHouseholdId() async => (await SharedPreferences.getInstance()).getString(_householdKey);
   Future<int?> getUserId() async => (await SharedPreferences.getInstance()).getInt(_userIdKey);
   Future<String?> getEmail() async => (await SharedPreferences.getInstance()).getString(_emailKey);
+
+  Future<void> saveSettings(int id, String language, bool darkMode, bool notificationEnabled) async {
+    final prefs = await SharedPreferences.getInstance();
+    final data = {
+      "id": id,
+      "userId": await getUserId() ?? 0,
+      "language": language,
+      "darkMode": darkMode,
+      "notificationEnabled": notificationEnabled,
+    };
+    await prefs.setString(_settingsKey, jsonEncode(data));
+  }
+
+  Future<Map<String, dynamic>?> getCachedSettings() async {
+    final prefs = await SharedPreferences.getInstance();
+    final jsonStr = prefs.getString(_settingsKey);
+    if (jsonStr != null && jsonStr.isNotEmpty) {
+      try {
+        return jsonDecode(jsonStr) as Map<String, dynamic>;
+      } catch (_) {}
+    }
+    return null;
+  }
 
   Future<void> clearSession() async {
     final prefs = await SharedPreferences.getInstance();

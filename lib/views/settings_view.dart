@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../bloc/auth_bloc.dart';
 import '../bloc/auth_event.dart';
 import '../bloc/settings/settings_bloc.dart';
+import '../utils/translations.dart';
 
 class SettingsView extends StatefulWidget {
   const SettingsView({Key? key}) : super(key: key);
@@ -20,9 +21,19 @@ class _SettingsViewState extends State<SettingsView> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
-      appBar: AppBar(title: const Text("Ajustes", style: TextStyle(fontWeight: FontWeight.bold)), backgroundColor: Colors.white, foregroundColor: const Color(0xFF1E293B), elevation: 0),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      appBar: AppBar(
+        title: Text(
+          context.tr('settings'),
+          style: const TextStyle(fontWeight: FontWeight.bold),
+        ),
+        backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
+        foregroundColor: Theme.of(context).appBarTheme.foregroundColor,
+        elevation: 0,
+      ),
       body: BlocBuilder<SettingsBloc, SettingsState>(
         builder: (context, state) {
           if (state is SettingsLoading) return const Center(child: CircularProgressIndicator());
@@ -30,16 +41,44 @@ class _SettingsViewState extends State<SettingsView> {
             return ListView(
               padding: const EdgeInsets.all(20),
               children: [
-                const Text("Preferencias de la App", style: TextStyle(color: Color(0xFF64748B), fontWeight: FontWeight.bold)),
+                Text(
+                  context.tr('app_preferences'),
+                  style: const TextStyle(color: Color(0xFF64748B), fontWeight: FontWeight.bold),
+                ),
                 const SizedBox(height: 16),
+                
                 _buildToggleCard(
-                  "Modo Oscuro", Icons.dark_mode_rounded, state.data.darkMode,
-                      (val) => context.read<SettingsBloc>().add(UpdateSettingToggle(darkMode: val)),
+                  context,
+                  context.tr('dark_mode'),
+                  Icons.dark_mode_rounded,
+                  state.data.darkMode,
+                  (val) => context.read<SettingsBloc>().add(UpdateSettingToggle(darkMode: val)),
                 ),
+                
                 _buildToggleCard(
-                  "Notificaciones", Icons.notifications_active_rounded, state.data.notificationEnabled,
-                      (val) => context.read<SettingsBloc>().add(UpdateSettingToggle(notificationEnabled: val)),
+                  context,
+                  context.tr('notifications'),
+                  Icons.notifications_active_rounded,
+                  state.data.notificationEnabled,
+                  (val) => context.read<SettingsBloc>().add(UpdateSettingToggle(notificationEnabled: val)),
                 ),
+
+                _buildDropdownCard(
+                  context,
+                  context.tr('language'),
+                  Icons.translate_rounded,
+                  state.data.language,
+                  const [
+                    DropdownMenuItem(value: "es", child: Text("Español")),
+                    DropdownMenuItem(value: "en", child: Text("English")),
+                  ],
+                  (val) {
+                    if (val != null) {
+                      context.read<SettingsBloc>().add(UpdateSettingToggle(language: val));
+                    }
+                  },
+                ),
+
                 const SizedBox(height: 40),
                 SizedBox(
                   width: double.infinity,
@@ -48,8 +87,16 @@ class _SettingsViewState extends State<SettingsView> {
                       context.read<AuthBloc>().add(LogoutRequested());
                     },
                     icon: const Icon(Icons.logout_rounded, color: Colors.white),
-                    label: const Text("Cerrar Sesión", style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
-                    style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFEF4444), padding: const EdgeInsets.symmetric(vertical: 16), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
+                    label: Text(
+                      context.tr('logout'),
+                      style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFFEF4444),
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      elevation: 0,
+                    ),
                   ),
                 )
               ],
@@ -61,12 +108,84 @@ class _SettingsViewState extends State<SettingsView> {
     );
   }
 
-  Widget _buildToggleCard(String title, IconData icon, bool value, Function(bool) onChanged) {
+  Widget _buildToggleCard(
+    BuildContext context,
+    String title,
+    IconData icon,
+    bool value,
+    Function(bool) onChanged,
+  ) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Card(
-      elevation: 0, margin: const EdgeInsets.only(bottom: 12), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12), side: BorderSide(color: Colors.grey.shade200)),
+      elevation: 0,
+      margin: const EdgeInsets.only(bottom: 12),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(color: isDark ? Colors.grey.shade800 : Colors.grey.shade200),
+      ),
+      color: Theme.of(context).cardColor,
       child: SwitchListTile(
-        title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF1E293B))),
-        secondary: Icon(icon, color: const Color(0xFF6366F1)), value: value, activeColor: const Color(0xFF10B981), onChanged: onChanged,
+        title: Text(
+          title,
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: isDark ? Colors.white : const Color(0xFF1E293B),
+          ),
+        ),
+        secondary: Icon(icon, color: const Color(0xFF6366F1)),
+        value: value,
+        activeColor: const Color(0xFF10B981),
+        onChanged: onChanged,
+      ),
+    );
+  }
+
+  Widget _buildDropdownCard(
+    BuildContext context,
+    String title,
+    IconData icon,
+    String currentValue,
+    List<DropdownMenuItem<String>> items,
+    Function(String?) onChanged,
+  ) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Card(
+      elevation: 0,
+      margin: const EdgeInsets.only(bottom: 12),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(color: isDark ? Colors.grey.shade800 : Colors.grey.shade200),
+      ),
+      color: Theme.of(context).cardColor,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        child: Row(
+          children: [
+            Icon(icon, color: const Color(0xFF6366F1)),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Text(
+                title,
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: isDark ? Colors.white : const Color(0xFF1E293B),
+                ),
+              ),
+            ),
+            DropdownButtonHideUnderline(
+              child: DropdownButton<String>(
+                value: currentValue,
+                items: items,
+                onChanged: onChanged,
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: Theme.of(context).primaryColor,
+                ),
+                dropdownColor: Theme.of(context).cardColor,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
