@@ -17,6 +17,7 @@ class HouseholdStatusRepository {
   Future<HouseholdStatusData> getHouseholdStatus() async {
     final token = await localDatabase.getToken();
     final householdId = await localDatabase.getHouseholdId();
+    final currentUserId = await localDatabase.getUserId();
 
     if (token == null || householdId == null) throw Exception("Sesión no válida");
 
@@ -57,9 +58,28 @@ class HouseholdStatusRepository {
             userNameMap[uId] = "Usuario $uId";
           }
         }
-        _cachedUserNames = userNameMap;
-        _cacheTimestamp = now;
       }
+
+      if (currentUserId != null && !userNameMap.containsKey(currentUserId)) {
+        try {
+          final currentUserRes = await client.get(Uri.parse('$baseUrl/user/user/$currentUserId'), headers: headers);
+          if (currentUserRes.statusCode == 200 && currentUserRes.body.isNotEmpty) {
+            final u = jsonDecode(currentUserRes.body);
+            String pName = u['personName'] ?? '';
+            String email = u['email'] ?? '';
+            if (pName.isNotEmpty) {
+              userNameMap[currentUserId] = pName;
+            } else if (email.isNotEmpty && !email.contains("com.split")) {
+              userNameMap[currentUserId] = email.split('@')[0];
+            } else {
+              userNameMap[currentUserId] = "Usuario $currentUserId";
+            }
+          }
+        } catch (_) {}
+      }
+
+      _cachedUserNames = userNameMap;
+      _cacheTimestamp = now;
     }
 
     double globalPaid = 0;
@@ -83,8 +103,11 @@ class HouseholdStatusRepository {
           globalPaid += paid;
 
           DateTime? deadline;
+          String? contributionName;
           try {
-            deadline = contribList.firstWhere((c) => c.id == mc.contributionId).deadlineForMembers;
+            final contrib = contribList.firstWhere((c) => c.id == mc.contributionId);
+            deadline = contrib.deadlineForMembers;
+            contributionName = contrib.description;
           } catch (_) {}
 
           details.add(HouseholdMemberDetail(
@@ -93,6 +116,7 @@ class HouseholdStatusRepository {
             assignedAmount: assigned,
             deadline: deadline,
             status: mc.status,
+            contributionName: contributionName,
           ));
         }
       }

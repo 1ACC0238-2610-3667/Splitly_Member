@@ -147,6 +147,7 @@ class HouseholdMemberDetail {
   final double assignedAmount;
   final DateTime? deadline;
   final String status;
+  final String? contributionName;
 
   HouseholdMemberDetail({
     required this.memberName,
@@ -154,6 +155,7 @@ class HouseholdMemberDetail {
     required this.assignedAmount,
     this.deadline,
     required this.status,
+    this.contributionName,
   });
 }
 

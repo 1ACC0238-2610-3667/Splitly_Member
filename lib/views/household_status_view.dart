@@ -265,6 +265,18 @@ class _HouseholdStatusViewState extends State<HouseholdStatusView> {
                             color: isDark ? Colors.white : const Color(0xFF1E293B),
                           ),
                         ),
+                        if (member.contributionName != null && member.contributionName!.isNotEmpty) ...[
+                          const SizedBox(height: 2),
+                          Text(
+                            member.contributionName!,
+                            style: TextStyle(
+                              color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+                              fontSize: 13,
+                              fontStyle: FontStyle.italic,
+                            ),
+                          ),
+                        ],
+                        const SizedBox(height: 2),
                         Text(
                           context.tr('limit', args: [deadlineTxt]),
                           style: TextStyle(color: isDark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B), fontSize: 12),
