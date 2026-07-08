@@ -17,14 +17,16 @@ class HouseholdMember {
   final String id;
   final String householdId;
   final int userId;
+  final double? income;
 
-  HouseholdMember({required this.id, required this.householdId, required this.userId});
+  HouseholdMember({required this.id, required this.householdId, required this.userId, this.income});
 
   factory HouseholdMember.fromJson(Map<String, dynamic> json) {
     return HouseholdMember(
       id: json['id'],
       householdId: json['householdId'],
       userId: json['userId'] ?? 0,
+      income: json['income'] != null ? (json['income'] as num).toDouble() : null,
     );
   }
 }

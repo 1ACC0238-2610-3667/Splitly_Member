@@ -66,17 +66,25 @@ class QuotasRepository {
   Future<UserIncome?> getUserIncome() async {
     final token = await localDatabase.getToken();
     final userId = await localDatabase.getUserId();
-    if (token == null || userId == null) return null;
+    final householdId = await localDatabase.getHouseholdId();
+    if (token == null || userId == null || householdId == null) return null;
 
     final response = await client.get(
-      Uri.parse('$baseUrl/user-income/byUserId/$userId'),
+      Uri.parse('$baseUrl/household_member/user/$userId'),
       headers: {'Authorization': 'Bearer $token'},
     );
 
     if (response.statusCode == 200 && response.body.isNotEmpty) {
-      final income = UserIncome.fromJson(jsonDecode(response.body));
-      await saveIncomeToCache(income);
-      return income;
+      final membersRaw = jsonDecode(response.body);
+      final membersList = (membersRaw is List ? membersRaw : [membersRaw]).map((e) => HouseholdMember.fromJson(e)).toList();
+      try {
+        final currentMember = membersList.firstWhere((m) => m.householdId == householdId);
+        final income = UserIncome(id: currentMember.id, income: currentMember.income ?? 0.0);
+        await saveIncomeToCache(income);
+        return income;
+      } catch (e) {
+        return null;
+      }
     }
     return null;
   }
@@ -84,33 +92,21 @@ class QuotasRepository {
   Future<void> saveUserIncome(double amount) async {
     final token = await localDatabase.getToken();
     final userId = await localDatabase.getUserId();
-    if (token == null || userId == null) return;
+    final householdId = await localDatabase.getHouseholdId();
+    if (token == null || userId == null || householdId == null) return;
 
     final existing = await getUserIncome();
+    if (existing == null) throw Exception("No estás asignado a este hogar");
 
     final headers = {'Content-Type': 'application/json', 'Authorization': 'Bearer $token'};
-    dynamic response;
-
-    if (existing == null) {
-      response = await client.post(
-        Uri.parse('$baseUrl/user-income'),
-        headers: headers,
-        body: jsonEncode({
-          "id": "",
-          "userId": userId,
-          "income": amount
-        }),
-      );
-    } else {
-      response = await client.put(
-        Uri.parse('$baseUrl/user-income/byId/${existing.id}'),
-        headers: headers,
-        body: jsonEncode({
-          "id": existing.id,
-          "income": amount
-        }),
-      );
-    }
+    
+    final response = await client.put(
+      Uri.parse('$baseUrl/household_member/${existing.id}'),
+      headers: headers,
+      body: jsonEncode({
+        "income": amount
+      }),
+    );
 
     if (response.statusCode != 200 && response.statusCode != 201) {
       throw Exception("Error al guardar el ingreso: ${response.body}");
